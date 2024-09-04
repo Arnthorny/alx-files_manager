@@ -6,8 +6,8 @@ import basicAuthentication from '../middlewares/BasicAuthentication';
 import {
   xTokenAuthentication,
   xTokenAuthenticationWithNoRes,
-} from '../middlewares/XTokenAuthentication.js';
-import FilesController from '../controllers/FilesController.js';
+} from '../middlewares/XTokenAuthentication';
+import FilesController from '../controllers/FilesController';
 
 const routes = Router();
 
