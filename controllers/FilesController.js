@@ -1,15 +1,16 @@
 // import mongoDBCore from "mongodb/lib/core/index.js";
-import { ObjectID } from 'mongodb';
+// import { ObjectID } from "mongodb";
 import mime from 'mime-types';
-// import BSON from "bson";
+import BSON from 'bson';
 import dbClient from '../utils/db';
 import {
   publishHelper,
   createLocalFile,
   readLocalFile,
 } from '../utils/files';
+import { addToFileQueue } from '../utils/jobs';
 
-// const { ObjectID } = BSON;
+const { ObjectID } = BSON;
 
 class FilesController {
   static async postUpload(req, res) {
@@ -67,6 +68,7 @@ class FilesController {
     delete newFileObj.localPath;
     delete newFileObj._id;
 
+    addToFileQueue(userId, String(_id));
     res.status(201).json({ id: String(_id), ...newFileObj });
   }
 
@@ -131,6 +133,8 @@ class FilesController {
   static async getFile(req, res) {
     const userId = req.user && req.user._id.toString();
     const fileId = req.params.id;
+    const size = req.query.size || undefined;
+    let localFilePath;
 
     const file = await (
       await dbClient.filesCollection()
@@ -146,7 +150,10 @@ class FilesController {
       res.status(400).json({ error: "A folder doesn't have content" });
       return;
     }
-    const fileBuffer = await readLocalFile(file.localPath);
+    if (size !== undefined) localFilePath = `${file.localPath}_${size}`;
+    else localFilePath = file.localPath;
+
+    const fileBuffer = await readLocalFile(localFilePath);
     if (!fileBuffer) {
       res.status(404).json({ error: 'Not found' });
     } else {
