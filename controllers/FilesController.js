@@ -50,7 +50,7 @@ class FilesController {
     newFileObj = {
       name,
       type,
-      parentId: (parentId && ObjectID(parentId)) || '0',
+      parentId: (parentId && ObjectID(parentId)) || 0,
       isPublic: isPublic || false,
       userId: ObjectID(userId),
     };
