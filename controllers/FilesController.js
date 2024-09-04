@@ -1,13 +1,15 @@
 // import mongoDBCore from "mongodb/lib/core/index.js";
 import { ObjectID } from 'mongodb';
 import mime from 'mime-types';
+// import BSON from "bson";
 import dbClient from '../utils/db';
 import {
   publishHelper,
   createLocalFile,
   readLocalFile,
 } from '../utils/files';
-// import ObjectID from "mongodb";
+
+// const { ObjectID } = BSON;
 
 class FilesController {
   static async postUpload(req, res) {
@@ -75,8 +77,8 @@ class FilesController {
     const file = await (
       await dbClient.filesCollection()
     ).findOne({
-      _id: ObjectID(fileId),
-      userId: ObjectID(userId),
+      _id: ObjectID.isValid(fileId) ? ObjectID(fileId) : null,
+      userId: ObjectID.isValid(userId) ? ObjectID(userId) : null,
     });
     if (!file) {
       res.status(404).json({ error: 'Not found' });
@@ -97,7 +99,11 @@ class FilesController {
       .aggregate([
         {
           $match: {
-            parentId: (parentId && ObjectID(parentId)) || { $exists: true },
+            parentId: (ObjectID.isValid(parentId)
+              ? ObjectID(parentId)
+              : null) || {
+              $exists: true,
+            },
           },
         },
         { $skip: page * 20 },
@@ -129,7 +135,7 @@ class FilesController {
     const file = await (
       await dbClient.filesCollection()
     ).findOne({
-      _id: fileId && ObjectID(fileId),
+      _id: ObjectID.isValid(fileId) ? ObjectID(fileId) : null,
     });
     if (!file || (!file.isPublic && userId !== String(file.userId))) {
       res.status(404).json({ error: 'Not found' });
@@ -144,7 +150,10 @@ class FilesController {
     if (!fileBuffer) {
       res.status(404).json({ error: 'Not found' });
     } else {
-      res.header('Content-Type', mime.lookup(file.name) || 'application/octet-stream');
+      res.header(
+        'Content-Type',
+        mime.lookup(file.name) || 'application/octet-stream',
+      );
       res.status(200).send(fileBuffer);
     }
   }
