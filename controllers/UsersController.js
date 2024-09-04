@@ -1,5 +1,6 @@
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
+import { addToUserQueue } from '../utils/jobs';
 
 class UsersController {
   static async postNew(req, res) {
@@ -24,6 +25,7 @@ class UsersController {
     const result = await (await dbClient.usersCollection())
       .insertOne({ email, password: hashedPassword });
 
+    addToUserQueue(String(result.insertedId));
     res.status(201).json({ id: result.insertedId.toString(), email });
   }
 

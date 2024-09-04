@@ -5,7 +5,7 @@ import imageFunction from 'image-thumbnail';
 import BSON from 'bson';
 import dbClient from './utils/db';
 import { createLocalFile } from './utils/files';
-import { fileQueue } from './utils/jobs';
+import { fileQueue, userQueue } from './utils/jobs';
 
 const { ObjectID } = BSON;
 
@@ -48,6 +48,22 @@ async function jobProcessor(job) {
   return allThumbnailPaths;
 }
 
-fileQueue.process(jobProcessor);
+async function userJobProcessor(job) {
+  const { userId } = job.data;
 
-module.exports = fileQueue;
+  if (!userId) throw new Error('Missing userId');
+
+  const user = await (
+    await dbClient.usersCollection()
+  ).findOne({
+    _id: ObjectID.isValid(userId) ? ObjectID(userId) : null,
+  });
+  if (!user) throw new Error('User not found');
+
+  console.log(`Welcome ${user.email}!`);
+}
+
+fileQueue.process(jobProcessor);
+userQueue.process(userJobProcessor);
+
+export { fileQueue, userQueue };

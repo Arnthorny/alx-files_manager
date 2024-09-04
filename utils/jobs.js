@@ -1,6 +1,7 @@
 import Queue from 'bull';
 
 const fileQueue = new Queue('thumbnail create');
+const userQueue = new Queue('Welcome user');
 
 fileQueue.on('waiting', (jobId) => {
   console.log(`This job waits: ${jobId}`);
@@ -22,4 +23,11 @@ function addToFileQueue(userId, fileId) {
   });
 }
 
-export { addToFileQueue, fileQueue };
+function addToUserQueue(userId) {
+  userQueue.add({
+    userId,
+  });
+}
+export {
+  addToFileQueue, fileQueue, userQueue, addToUserQueue,
+};
